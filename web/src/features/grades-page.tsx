@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../app-context';
-import { PageDialog, SelectField, ErrorBoundary, TableSkeleton } from '../components';
+import { CollapsibleFilterBar, PageDialog, SelectField, ErrorBoundary, TableSkeleton } from '../components';
 import { latestAttendance } from '../lib/attendance';
 import { buildClassBoletimData, buildUnifiedBoletimData, type ClassBoletimData } from '../lib/boletim';
 import { printClassBoletimPdf } from '../lib/boletim-pdf';
@@ -754,53 +754,14 @@ export function GradesPage() {
     <div className="space-y-6 text-left">
       <div className={`space-y-6 ${selectedStudentForBoletim ? 'print:hidden' : ''}`}>
       {/* Top Filter & View Switcher Bar */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4 print:hidden">
-        {/* Class attribute filters: Dia da semana, Turno, Lab */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-3 border-b border-slate-100">
-          <ClassFilterFields
-            weekDay={filterWeekDay}
-            onWeekDayChange={setFilterWeekDay}
-            shift={filterShift}
-            onShiftChange={setFilterShift}
-            laboratoryId={filterLabId}
-            onLaboratoryIdChange={setFilterLabId}
-          />
-        </div>
-
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 max-w-2xl">
-            <SelectField
-              label="Turma"
-              value={classId}
-              onChange={handleClassChange}
-              options={activeClasses.map((c) => {
-                const rawName = text(c, 'name');
-                const num = c.class_number !== undefined && c.class_number !== null
-                  ? Number(c.class_number)
-                  : extractClassNumber(rawName);
-                const clean = cleanClassName(rawName);
-                return {
-                  value: c.id,
-                  label: formatClassDisplayName(num, clean),
-                };
-              })}
-            />
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-700">Buscar aluno</label>
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Nome ou matrícula..."
-                  className="w-full h-9 pl-9 pr-3 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* View Switcher */}
+      {/* Top Filter & View Switcher Bar (Single-Line & Collapsible) */}
+      <CollapsibleFilterBar
+        title="Filtros de notas e turmas"
+        storageKey="filter_grades_expanded"
+        activeCount={(search ? 1 : 0) + (filterWeekDay ? 1 : 0) + (filterShift ? 1 : 0) + (filterLabId ? 1 : 0)}
+        summary={activeClasses.find((c) => c.id === classId)?.name as string | undefined}
+        className="print:hidden"
+        headerActions={
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80">
               <button
@@ -813,7 +774,8 @@ export function GradesPage() {
                 }`}
               >
                 <FileSpreadsheet className="w-3.5 h-3.5" />
-                <span>Tabelas e Lançamento</span>
+                <span className="hidden sm:inline">Tabelas e Lançamento</span>
+                <span className="sm:hidden">Lançamento</span>
               </button>
               <button
                 type="button"
@@ -825,7 +787,8 @@ export function GradesPage() {
                 }`}
               >
                 <Award className="w-3.5 h-3.5" />
-                <span>Boletim Consolidado da Turma</span>
+                <span className="hidden sm:inline">Boletim Consolidado da Turma</span>
+                <span className="sm:hidden">Boletim</span>
               </button>
             </div>
 
@@ -860,8 +823,59 @@ export function GradesPage() {
               </button>
             )}
           </div>
+        }
+      >
+        <div className="flex flex-wrap xl:flex-nowrap items-end gap-2.5">
+          {/* Busca aluno */}
+          <div className="flex-1 min-w-[180px] flex flex-col gap-1.5 text-left">
+            <label htmlFor="search-student-grades" className="text-xs font-medium text-slate-700">
+              Buscar aluno
+            </label>
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="search-student-grades"
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Nome ou matrícula..."
+                className="w-full h-9 pl-9 pr-3 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+              />
+            </div>
+          </div>
+
+          {/* Turma */}
+          <div className="flex-1 min-w-[200px]">
+            <SelectField
+              label="Turma"
+              value={classId}
+              onChange={handleClassChange}
+              options={activeClasses.map((c) => {
+                const rawName = text(c, 'name');
+                const num = c.class_number !== undefined && c.class_number !== null
+                  ? Number(c.class_number)
+                  : extractClassNumber(rawName);
+                const clean = cleanClassName(rawName);
+                return {
+                  value: c.id,
+                  label: formatClassDisplayName(num, clean),
+                };
+              })}
+            />
+          </div>
+
+          {/* Class attribute filters: Dia da semana, Turno, Lab em single-line */}
+          <ClassFilterFields
+            singleLine
+            weekDay={filterWeekDay}
+            onWeekDayChange={setFilterWeekDay}
+            shift={filterShift}
+            onShiftChange={setFilterShift}
+            laboratoryId={filterLabId}
+            onLaboratoryIdChange={setFilterLabId}
+          />
         </div>
-      </div>
+      </CollapsibleFilterBar>
 
       {notice && (
         <div

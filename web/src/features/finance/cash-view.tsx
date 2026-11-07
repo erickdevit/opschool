@@ -15,7 +15,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useApp } from '../../app-context';
-import { EmptyState, PageDialog, TableSkeleton } from '../../components';
+import { CollapsibleFilterBar, EmptyState, PageDialog, TableSkeleton } from '../../components';
 import { useEntity } from '../../lib/use-entity';
 import type { CashTransaction, CashType, PaymentMethod } from '../../types';
 import { CashPrintDocument } from './finance-print';
@@ -170,100 +170,107 @@ export function CashView({ mode = 'all' }: { mode?: 'all' | 'entrada' | 'saida' 
   return (
     <>
       <div className="flex flex-col gap-4 text-left print:hidden">
-        {/* Filter and Action Bar */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xs flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-          <div className="flex flex-wrap items-center gap-2 flex-1">
-            <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-            <input
-              type="text"
-              placeholder="Buscar descrição, aluno ou categoria..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
-            />
-          </div>
-
-          <input
-            type="month"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
-          />
-
-          {mode === 'all' && (
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
-            >
-              <option value="all">Todas as movimentações</option>
-              <option value="entrada">Apenas Entradas</option>
-              <option value="saida">Apenas Saídas</option>
-            </select>
-          )}
-
-          <select
-            value={filterMethod}
-            onChange={(e) => setFilterMethod(e.target.value)}
-            className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
-          >
-            <option value="all">Todos os meios</option>
-            <option value="PIX">PIX</option>
-            <option value="dinheiro">Dinheiro</option>
-            <option value="cartao_credito">Cartão de Crédito</option>
-            <option value="cartao_debito">Cartão de Débito</option>
-            <option value="boleto">Boleto</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() =>
-              printWithDocumentTitle(
-                formatPrintDocumentTitle([
-                  mode === 'entrada'
-                    ? 'Relatório de Entradas'
+        {/* Filter and Action Bar (Single-Line & Collapsible) */}
+        <CollapsibleFilterBar
+          title={mode === 'entrada' ? 'Filtros de entradas' : mode === 'saida' ? 'Filtros de saídas' : 'Filtros do livro caixa'}
+          storageKey={`filter_cash_${mode}_expanded`}
+          activeCount={(search ? 1 : 0) + (filterType !== 'all' ? 1 : 0) + (filterMethod !== 'all' ? 1 : 0)}
+          summary={filterMonth}
+          headerActions={
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  printWithDocumentTitle(
+                    formatPrintDocumentTitle([
+                      mode === 'entrada'
+                        ? 'Relatório de Entradas'
+                        : mode === 'saida'
+                          ? 'Relatório de Saídas'
+                          : 'Livro Caixa',
+                      filterMonth,
+                    ]),
+                  )
+                }
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">
+                  {mode === 'entrada'
+                    ? 'Imprimir Entradas'
                     : mode === 'saida'
-                      ? 'Relatório de Saídas'
-                      : 'Livro Caixa',
-                  filterMonth,
-                ]),
-              )
-            }
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>
-              {mode === 'entrada'
-                ? 'Imprimir Entradas'
-                : mode === 'saida'
-                  ? 'Imprimir Saídas'
-                  : 'Imprimir Caixa'}
-            </span>
-          </button>
+                      ? 'Imprimir Saídas'
+                      : 'Imprimir Caixa'}
+                </span>
+                <span className="sm:hidden">Imprimir</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (mode === 'entrada') setTxType('entrada');
-              else if (mode === 'saida') setTxType('saida');
-              setCreateOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors shadow-2xs cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>
-              {mode === 'entrada'
-                ? 'Nova Entrada'
-                : mode === 'saida'
-                  ? 'Nova Saída'
-                  : 'Nova Movimentação'}
-            </span>
-          </button>
-        </div>
-      </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (mode === 'entrada') setTxType('entrada');
+                  else if (mode === 'saida') setTxType('saida');
+                  setCreateOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors shadow-2xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>
+                  {mode === 'entrada'
+                    ? 'Nova Entrada'
+                    : mode === 'saida'
+                      ? 'Nova Saída'
+                      : 'Nova Movimentação'}
+                </span>
+              </button>
+            </div>
+          }
+        >
+          <div className="flex flex-wrap xl:flex-nowrap items-center gap-2.5">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Buscar descrição, aluno ou categoria..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 min-h-[36px]"
+              />
+            </div>
+
+            <input
+              type="month"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none min-h-[36px] shrink-0 cursor-pointer"
+            />
+
+            {mode === 'all' && (
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none min-h-[36px] shrink-0 cursor-pointer"
+              >
+                <option value="all">Todas as movimentações</option>
+                <option value="entrada">Apenas Entradas</option>
+                <option value="saida">Apenas Saídas</option>
+              </select>
+            )}
+
+            <select
+              value={filterMethod}
+              onChange={(e) => setFilterMethod(e.target.value)}
+              className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none min-h-[36px] shrink-0 cursor-pointer"
+            >
+              <option value="all">Todos os meios</option>
+              <option value="PIX">PIX</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="cartao_credito">Cartão de Crédito</option>
+              <option value="cartao_debito">Cartão de Débito</option>
+              <option value="boleto">Boleto</option>
+            </select>
+          </div>
+        </CollapsibleFilterBar>
 
       {/* Cash Book Table */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">

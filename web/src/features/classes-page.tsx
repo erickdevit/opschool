@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../app-context';
-import { DateField, EmptyState, PageDialog, Section, SelectField, TableSkeleton } from '../components';
+import { CollapsibleFilterBar, DateField, EmptyState, PageDialog, Section, SelectField, TableSkeleton } from '../components';
 import { formatDate, parseBrazilDate } from '../lib/date';
 import type { LocalRecord } from '../types';
 import {
@@ -309,9 +309,25 @@ export function ClassesPage() {
         </div>
       )}
 
-      {/* Filter Bar */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-end gap-2.5 sm:gap-3">
+      {/* Filter Bar (Single-Line & Collapsible) */}
+      <CollapsibleFilterBar
+        title="Filtros de turmas"
+        storageKey="filter_classes_expanded"
+        activeCount={(search ? 1 : 0) + (filterTeacherId ? 1 : 0)}
+        headerActions={
+          permissions.canCreate ? (
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Nova turma</span>
+            </button>
+          ) : null
+        }
+      >
+        <div className="flex flex-wrap xl:flex-nowrap items-end gap-2.5">
           <div className="flex-1 min-w-[200px]">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="search-class" className="text-xs font-medium text-slate-700">
@@ -334,7 +350,7 @@ export function ClassesPage() {
           </div>
 
           {permissions.canAssignTeachers && (
-            <div className="w-full sm:w-56">
+            <div className="w-full sm:w-56 shrink-0">
               <SelectField
                 label="Professor"
                 value={filterTeacherId}
@@ -343,21 +359,8 @@ export function ClassesPage() {
               />
             </div>
           )}
-
-          {permissions.canCreate && (
-            <div className="shrink-0 pt-1 sm:pt-0">
-              <button
-                type="button"
-                onClick={openCreate}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer w-full sm:w-auto h-[38px]"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Nova turma</span>
-              </button>
-            </div>
-          )}
         </div>
-      </div>
+      </CollapsibleFilterBar>
 
       {/* Roster Table */}
       <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">

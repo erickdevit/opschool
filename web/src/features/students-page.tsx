@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../app-context';
-import { DateField, PageDialog, Section, SelectField } from '../components';
+import { CollapsibleFilterBar, DateField, PageDialog, Section, SelectField } from '../components';
 import { formatDate, parseBrazilDate, todayInSaoPaulo } from '../lib/date';
 import { buildUnifiedBoletimData } from '../lib/boletim';
 import { StudentReportCardView } from './reports/student-report-card-view';
@@ -355,22 +355,27 @@ export function StudentsPage({ today = todayInSaoPaulo() }: { today?: string }) 
           </div>
         )}
 
-        {/* Filter Bar */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xs space-y-2.5 print:hidden">
-          {/* Class Filters: Dia da semana, Turno, Lab */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2.5 border-b border-slate-100">
-            <ClassFilterFields
-              weekDay={filterWeekDay}
-              onWeekDayChange={setFilterWeekDay}
-              shift={filterShift}
-              onShiftChange={setFilterShift}
-              laboratoryId={filterLabId}
-              onLaboratoryIdChange={setFilterLabId}
-            />
-          </div>
-
-          <div className="flex flex-col lg:flex-row lg:items-end gap-2.5 sm:gap-3">
-            <div className="flex-1 min-w-[200px]">
+        {/* Filter Bar (Single-Line & Collapsible) */}
+        <CollapsibleFilterBar
+          title="Filtros de alunos"
+          storageKey="filter_students_expanded"
+          activeCount={(search ? 1 : 0) + (filterClassId ? 1 : 0) + (filterStatus !== 'all' ? 1 : 0) + (filterWeekDay ? 1 : 0) + (filterShift ? 1 : 0) + (filterLabId ? 1 : 0)}
+          className="print:hidden"
+          headerActions={
+            permissions.canCreate ? (
+              <button
+                type="button"
+                onClick={openCreate}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Novo aluno</span>
+              </button>
+            ) : null
+          }
+        >
+          <div className="flex flex-wrap xl:flex-nowrap items-end gap-2.5">
+            <div className="flex-1 min-w-[180px]">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="search-student-page" className="text-xs font-medium text-slate-700">
                   Buscar aluno
@@ -391,7 +396,7 @@ export function StudentsPage({ today = todayInSaoPaulo() }: { today?: string }) 
               </div>
             </div>
 
-            <div className="w-full lg:w-48">
+            <div className="w-full sm:w-44 shrink-0">
               <SelectField
                 label="Turma"
                 value={filterClassId}
@@ -410,34 +415,32 @@ export function StudentsPage({ today = todayInSaoPaulo() }: { today?: string }) 
               />
             </div>
 
-          <div className="w-full lg:w-44">
-            <SelectField
-              label="Situação da matrícula"
-              value={filterStatus}
-              onChange={setFilterStatus}
-              options={[
-                { value: 'all', label: 'Todas' },
-                { value: 'ativa', label: 'Ativas' },
-                { value: 'trancada', label: 'Trancadas' },
-                { value: 'concluida', label: 'Concluídas' },
-              ]}
+            <div className="w-full sm:w-36 shrink-0">
+              <SelectField
+                label="Situação"
+                value={filterStatus}
+                onChange={setFilterStatus}
+                options={[
+                  { value: 'all', label: 'Todas' },
+                  { value: 'ativa', label: 'Ativas' },
+                  { value: 'trancada', label: 'Trancadas' },
+                  { value: 'concluida', label: 'Concluídas' },
+                ]}
+              />
+            </div>
+
+            {/* Class attribute filters: Dia, Turno, Lab em single-line */}
+            <ClassFilterFields
+              singleLine
+              weekDay={filterWeekDay}
+              onWeekDayChange={setFilterWeekDay}
+              shift={filterShift}
+              onShiftChange={setFilterShift}
+              laboratoryId={filterLabId}
+              onLaboratoryIdChange={setFilterLabId}
             />
           </div>
-
-          {permissions.canCreate && (
-            <div className="shrink-0 pt-1 lg:pt-0">
-              <button
-                type="button"
-                onClick={openCreate}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer w-full sm:w-auto h-[38px]"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Novo aluno</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+        </CollapsibleFilterBar>
 
       {/* Students Table */}
       <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">

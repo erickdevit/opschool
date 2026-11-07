@@ -12,7 +12,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useApp } from '../app-context';
-import { DateField } from '../components';
+import { CollapsibleFilterBar, DateField } from '../components';
 import { ClassFilterFields, filterClassesByAttributes } from './class-filter-controls';
 import { buildAnalytics, type AnalyticsResult } from '../lib/analytics';
 import { formatDate, parseBrazilDate, todayInSaoPaulo } from '../lib/date';
@@ -410,21 +410,44 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Period Selector Card */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xs text-left">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-900">Período Analisado</p>
-              <p className="text-[11px] text-slate-400 font-medium">
-                {range.from || '—'} a {range.to || '—'}
-              </p>
-            </div>
+      {/* Period & Filter Bar (Single-Line & Collapsible) */}
+      <CollapsibleFilterBar
+        title="Filtros e período"
+        icon={Calendar}
+        storageKey="filter_dashboard_expanded"
+        activeCount={(selectedClassId ? 1 : 0) + (filterWeekDay ? 1 : 0) + (filterShift ? 1 : 0) + (filterLabId ? 1 : 0) + (preset !== 30 ? 1 : 0)}
+        summary={`${range.from || '—'} a ${range.to || '—'}${selectedClassId ? ` • ${classOptions.find((o) => o.value === selectedClassId)?.label}` : ''}`}
+        headerActions={
+          <div className="inline-flex flex-wrap p-0.5 bg-slate-100 rounded-lg gap-0.5 border border-slate-200">
+            {([7, 30, 90] as const).map((days) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => applyPreset(days)}
+                className={`px-2.5 py-1 min-h-[30px] rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  preset === days
+                    ? 'bg-slate-950 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                {days} dias
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setPreset('custom')}
+              className={`px-2.5 py-1 min-h-[30px] rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                preset === 'custom'
+                  ? 'bg-slate-950 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              Personalizado
+            </button>
           </div>
-
+        }
+      >
+        <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Turma and Attribute Top Filters */}
             <ClassFilterFields
@@ -438,7 +461,7 @@ export function DashboardPage() {
             />
 
             <div className="flex items-center gap-1.5">
-              <label htmlFor="dashboard-class-filter" className="text-xs font-bold text-slate-700 shrink-0">
+              <label htmlFor="dashboard-class-filter" className="sr-only">
                 Turma:
               </label>
               <select
@@ -455,68 +478,40 @@ export function DashboardPage() {
                 ))}
               </select>
             </div>
+          </div>
 
-            <div className="inline-flex flex-wrap p-0.5 bg-slate-100 rounded-lg gap-0.5 border border-slate-200 self-start lg:self-auto">
-              {([7, 30, 90] as const).map((days) => (
-                <button
-                  key={days}
-                  type="button"
-                  onClick={() => applyPreset(days)}
-                  className={`px-3 py-1.5 min-h-[36px] rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                    preset === days
-                      ? 'bg-slate-950 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                  }`}
-                >
-                  {days} dias
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setPreset('custom')}
-                className={`px-3 py-1.5 min-h-[36px] rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                  preset === 'custom'
-                    ? 'bg-slate-950 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                }`}
-              >
-                Personalizado
-              </button>
+          {preset === 'custom' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-100 max-w-xl">
+              <DateField
+                label="Data inicial"
+                value={range.from}
+                onChange={(value) => setRange((cur) => ({ ...cur, from: value }))}
+                required
+                allowFuture
+              />
+              <DateField
+                label="Data final"
+                value={range.to}
+                onChange={(value) => setRange((cur) => ({ ...cur, to: value }))}
+                required
+                allowFuture
+              />
             </div>
-          </div>
+          )}
+
+          {!validRange && (
+            <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
+              Informe um período válido; a data inicial não pode ser posterior à data final.
+            </div>
+          )}
+
+          {loading && (
+            <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden mt-3" aria-label="Carregando indicadores">
+              <div className="bg-slate-950 h-full w-1/3 animate-pulse" />
+            </div>
+          )}
         </div>
-
-        {preset === 'custom' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100 max-w-xl">
-            <DateField
-              label="Data inicial"
-              value={range.from}
-              onChange={(value) => setRange((cur) => ({ ...cur, from: value }))}
-              required
-              allowFuture
-            />
-            <DateField
-              label="Data final"
-              value={range.to}
-              onChange={(value) => setRange((cur) => ({ ...cur, to: value }))}
-              required
-              allowFuture
-            />
-          </div>
-        )}
-
-        {!validRange && (
-          <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
-            Informe um período válido; a data inicial não pode ser posterior à data final.
-          </div>
-        )}
-
-        {loading && (
-          <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden mt-3" aria-label="Carregando indicadores">
-            <div className="bg-slate-950 h-full w-1/3 animate-pulse" />
-          </div>
-        )}
-      </div>
+      </CollapsibleFilterBar>
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">

@@ -1,6 +1,6 @@
 import React, { Component, useEffect, useState, type ErrorInfo, type PropsWithChildren, type ReactNode } from 'react';
 import QRCode from 'qrcode';
-import { AlertCircle, ArrowLeft, Calendar, FileQuestion, RefreshCw, X, type LucideIcon } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Calendar, ChevronDown, FileQuestion, RefreshCw, SlidersHorizontal, X, type LucideIcon } from 'lucide-react';
 import { parseBrazilDate, formatDate } from './lib/date';
 
 export class ErrorBoundary extends Component<
@@ -607,5 +607,121 @@ export function NotFoundPage(): React.ReactElement {
     </div>
   );
 }
+
+export function isAndroidDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || '';
+  return /android/i.test(ua);
+}
+
+export interface CollapsibleFilterBarProps {
+  title?: string;
+  icon?: LucideIcon;
+  activeCount?: number;
+  summary?: React.ReactNode;
+  headerActions?: React.ReactNode;
+  defaultExpanded?: boolean;
+  storageKey?: string;
+  className?: string;
+  children: React.ReactNode;
+}
+
+export function CollapsibleFilterBar({
+  title = 'Filtros',
+  icon: Icon = SlidersHorizontal,
+  activeCount,
+  summary,
+  headerActions,
+  defaultExpanded,
+  storageKey,
+  className = '',
+  children,
+}: CollapsibleFilterBarProps) {
+  const [expanded, setExpanded] = useState<boolean>(() => {
+    if (defaultExpanded !== undefined) return defaultExpanded;
+    if (storageKey && typeof localStorage !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved !== null) return saved === 'true';
+      } catch {
+        // ignore localStorage access issues
+      }
+    }
+    return !isAndroidDevice();
+  });
+
+  const toggle = () => {
+    setExpanded((prev) => {
+      const next = !prev;
+      if (storageKey && typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem(storageKey, String(next));
+        } catch {
+          // ignore
+        }
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div className={`bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xs text-left ${className}`}>
+      <div
+        className={`flex items-center justify-between gap-2.5 transition-all ${
+          expanded ? 'pb-2.5 mb-2.5 border-b border-slate-100' : ''
+        }`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-expanded={expanded}
+            className="flex items-center gap-2 text-left cursor-pointer group select-none"
+          >
+            <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-slate-200/80 flex items-center justify-center text-slate-600 group-hover:text-slate-900 transition-colors shrink-0">
+              <Icon className="w-3.5 h-3.5" />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-slate-950 transition-colors">
+              {title}
+            </span>
+            {typeof activeCount === 'number' && activeCount > 0 && (
+              <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-900 text-white rounded-full shrink-0">
+                {activeCount} {activeCount === 1 ? 'ativo' : 'ativos'}
+              </span>
+            )}
+          </button>
+
+          {!expanded && summary && (
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 truncate">
+              <span className="text-slate-300">•</span>
+              {summary}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {headerActions}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Recolher filtros' : 'Expandir filtros'}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200/80 rounded-lg transition-colors cursor-pointer"
+          >
+            <span>{expanded ? 'Recolher' : 'Expandir'}</span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                expanded ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {expanded && <div className="animate-in fade-in duration-150">{children}</div>}
+    </div>
+  );
+}
+
 
 

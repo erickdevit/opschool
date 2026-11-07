@@ -1,6 +1,6 @@
 import React from 'react';
 import { RotateCcw } from 'lucide-react';
-import { DateField, SelectField } from '../../components';
+import { CollapsibleFilterBar, DateField, SelectField } from '../../components';
 import { formatDate, parseBrazilDate } from '../../lib/date';
 import type { LocalRecord } from '../../types';
 import { cleanClassName, extractClassNumber, formatClassDisplayName } from '../classes-model';
@@ -48,9 +48,32 @@ export function BiFilterBar({
   };
 
   return (
-    <div className="bg-white border border-slate-200/90 rounded-2xl p-2.5 sm:p-3 shadow-2xs text-left print:hidden">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-2 sm:gap-2.5 items-end">
-        <div>
+    <CollapsibleFilterBar
+      title="Filtros do painel de BI"
+      storageKey="filter_bi_expanded"
+      activeCount={
+        (filters.courseId ? 1 : 0) +
+        (filters.classId ? 1 : 0) +
+        (filters.teacherId ? 1 : 0) +
+        (filters.weekDay ? 1 : 0) +
+        (filters.shift ? 1 : 0) +
+        (filters.laboratoryId ? 1 : 0)
+      }
+      summary={`${formatDate(filters.from)} a ${formatDate(filters.to)}`}
+      className="print:hidden"
+      headerActions={
+        <button
+          type="button"
+          onClick={onReset}
+          className="h-[32px] px-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+          <span>Restaurar</span>
+        </button>
+      }
+    >
+      <div className="flex flex-wrap xl:flex-nowrap items-end gap-2.5">
+        <div className="w-full sm:w-36 shrink-0">
           <DateField
             label="Data inicial"
             value={formatDate(filters.from)}
@@ -59,7 +82,7 @@ export function BiFilterBar({
           />
         </div>
 
-        <div>
+        <div className="w-full sm:w-36 shrink-0">
           <DateField
             label="Data final"
             value={formatDate(filters.to)}
@@ -68,7 +91,7 @@ export function BiFilterBar({
           />
         </div>
 
-        <div>
+        <div className="w-full sm:w-44 shrink-0">
           <SelectField
             label="Curso"
             value={filters.courseId ?? ''}
@@ -84,7 +107,7 @@ export function BiFilterBar({
           />
         </div>
 
-        <div>
+        <div className="w-full sm:w-44 shrink-0">
           <SelectField
             label="Turma"
             value={filters.classId ?? ''}
@@ -115,7 +138,7 @@ export function BiFilterBar({
           />
         </div>
 
-        <div>
+        <div className="w-full sm:w-44 shrink-0">
           <SelectField
             label="Professor"
             value={filters.teacherId ?? ''}
@@ -130,16 +153,16 @@ export function BiFilterBar({
           />
         </div>
 
-        <div>
+        <div className="w-full sm:w-32 shrink-0">
           <SelectField
-            label="Dia da semana"
+            label="Dia"
             value={filters.weekDay ?? ''}
             onChange={(weekDay) => onChange({ ...filters, weekDay: weekDay || undefined, classId: undefined })}
             options={weekDayFilterOptions}
           />
         </div>
 
-        <div>
+        <div className="w-full sm:w-32 shrink-0">
           <SelectField
             label="Turno"
             value={filters.shift ?? ''}
@@ -153,9 +176,9 @@ export function BiFilterBar({
           />
         </div>
 
-        <div>
+        <div className="w-full sm:w-32 shrink-0">
           <SelectField
-            label="Laboratório"
+            label="Lab"
             value={filters.laboratoryId ?? ''}
             onChange={(labId) => onChange({ ...filters, laboratoryId: labId || undefined, classId: undefined })}
             options={[
@@ -167,18 +190,7 @@ export function BiFilterBar({
             ]}
           />
         </div>
-
-        <div>
-          <button
-            type="button"
-            onClick={onReset}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 text-xs font-medium rounded-lg transition-colors cursor-pointer w-full h-[38px]"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-            <span>Restaurar</span>
-          </button>
-        </div>
       </div>
-    </div>
+    </CollapsibleFilterBar>
   );
 }

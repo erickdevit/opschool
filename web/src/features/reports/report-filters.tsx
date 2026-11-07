@@ -1,6 +1,6 @@
 import React from 'react';
 import { RotateCcw } from 'lucide-react';
-import { DateField, SelectField } from '../../components';
+import { CollapsibleFilterBar, DateField, SelectField } from '../../components';
 import { SearchableStudentSelect } from '../student-select';
 import { formatDate, parseBrazilDate } from '../../lib/date';
 import type { LocalRecord, Role } from '../../types';
@@ -99,9 +99,32 @@ export function ReportFiltersBar({
   };
 
   return (
-    <div className="bg-white border border-slate-200/90 rounded-2xl p-2.5 sm:p-3 shadow-2xs text-left print:hidden">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-2 sm:gap-2.5 items-end">
-        <div className="sm:col-span-2">
+    <CollapsibleFilterBar
+      title="Filtros de relatórios"
+      storageKey="filter_reports_expanded"
+      activeCount={
+        (filters.courseId ? 1 : 0) +
+        (filters.classId ? 1 : 0) +
+        (filters.studentId ? 1 : 0) +
+        (filters.teacherId ? 1 : 0) +
+        (filters.weekDay ? 1 : 0) +
+        (filters.shift ? 1 : 0) +
+        (filters.laboratoryId ? 1 : 0)
+      }
+      className="print:hidden"
+      headerActions={
+        <button
+          type="button"
+          onClick={onReset}
+          className="h-[32px] px-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+          <span>Restaurar</span>
+        </button>
+      }
+    >
+      <div className="flex flex-wrap xl:flex-nowrap items-end gap-2.5">
+        <div className="flex-1 min-w-[200px]">
           <SelectField
             label="Tipo de relatório"
             value={filters.type}
@@ -110,7 +133,7 @@ export function ReportFiltersBar({
           />
         </div>
 
-        <div>
+        <div className="w-full sm:w-36 shrink-0">
           <DateField
             label="Data inicial"
             value={formatDate(filters.from)}
@@ -119,7 +142,7 @@ export function ReportFiltersBar({
           />
         </div>
 
-        <div>
+        <div className="w-full sm:w-36 shrink-0">
           <DateField
             label="Data final"
             value={formatDate(filters.to)}
@@ -129,7 +152,7 @@ export function ReportFiltersBar({
         </div>
 
         {canManage(role) && (
-          <div>
+          <div className="w-full sm:w-44 shrink-0">
             <SelectField
               label="Professor"
               value={filters.teacherId ?? ''}
@@ -154,7 +177,7 @@ export function ReportFiltersBar({
         )}
 
         {showCourse && (
-          <div>
+          <div className="w-full sm:w-44 shrink-0">
             <SelectField
               label="Curso"
               value={filters.courseId ?? ''}
@@ -180,6 +203,7 @@ export function ReportFiltersBar({
         {showClass && (
           <>
             <ClassFilterFields
+              singleLine
               weekDay={filters.weekDay ?? ''}
               onWeekDayChange={(val) => onChange({ ...filters, weekDay: val || undefined, classId: undefined })}
               shift={filters.shift ?? ''}
@@ -187,7 +211,7 @@ export function ReportFiltersBar({
               laboratoryId={filters.laboratoryId ?? ''}
               onLaboratoryIdChange={(val) => onChange({ ...filters, laboratoryId: val || undefined, classId: undefined })}
             />
-            <div>
+            <div className="w-full sm:w-44 shrink-0">
               <SelectField
                 label="Turma"
                 value={filters.classId ?? ''}
@@ -227,7 +251,7 @@ export function ReportFiltersBar({
         )}
 
         {((filters.type === 'student' && filters.classId) || filters.type === 'studentBoletim') && (
-          <div>
+          <div className="w-full sm:w-56 shrink-0">
             <SearchableStudentSelect
               label="Aluno"
               value={filters.studentId ?? ''}
@@ -239,18 +263,7 @@ export function ReportFiltersBar({
             />
           </div>
         )}
-
-        <div>
-          <button
-            type="button"
-            onClick={onReset}
-            className="w-full h-[38px] px-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-            <span>Restaurar</span>
-          </button>
-        </div>
       </div>
-    </div>
+    </CollapsibleFilterBar>
   );
 }

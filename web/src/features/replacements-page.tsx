@@ -9,7 +9,7 @@ import {
   Check,
 } from 'lucide-react';
 import { useApp } from '../app-context';
-import { DateField, EmptyState, PageDialog, Section, SelectField, TableSkeleton } from '../components';
+import { CollapsibleFilterBar, DateField, EmptyState, PageDialog, Section, SelectField, TableSkeleton } from '../components';
 import { formatDate, parseBrazilDate, todayInSaoPaulo } from '../lib/date';
 import { useEntity } from '../lib/use-entity';
 import type { LocalRecord } from '../types';
@@ -178,22 +178,15 @@ export function ReplacementsPage({
 
   return (
     <div className="flex flex-col gap-3.5 text-left">
-      {/* Filter Bar */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xs space-y-2.5">
-        {/* Class attribute filters: Dia da semana, Turno, Lab */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2.5 border-b border-slate-100">
-          <ClassFilterFields
-            weekDay={filterWeekDay}
-            onWeekDayChange={setFilterWeekDay}
-            shift={filterShift}
-            onShiftChange={setFilterShift}
-            laboratoryId={filterLabId}
-            onLaboratoryIdChange={setFilterLabId}
-          />
-        </div>
-
-        <div className="flex flex-col sm:flex-row sm:items-end gap-2.5 sm:gap-3">
-          <div className="flex-1 min-w-[200px]">
+      {/* Filter Bar (Single-Line & Collapsible) */}
+      <CollapsibleFilterBar
+        title="Filtros de reposições"
+        storageKey="filter_replacements_expanded"
+        activeCount={(search ? 1 : 0) + (filterClassId ? 1 : 0) + (filterWeekDay ? 1 : 0) + (filterShift ? 1 : 0) + (filterLabId ? 1 : 0)}
+        summary={classOptions.find((c) => c.value === filterClassId)?.label}
+      >
+        <div className="flex flex-wrap xl:flex-nowrap items-end gap-2.5">
+          <div className="flex-1 min-w-[180px]">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="search-replacements" className="text-xs font-medium text-slate-700">
                 Buscar aluno
@@ -214,7 +207,7 @@ export function ReplacementsPage({
             </div>
           </div>
 
-          <div className="w-full sm:w-56">
+          <div className="w-full sm:w-48 shrink-0">
             <SelectField
               label="Turma"
               value={filterClassId}
@@ -222,8 +215,19 @@ export function ReplacementsPage({
               options={classOptions}
             />
           </div>
+
+          {/* Class attribute filters: Dia, Turno, Lab em single-line */}
+          <ClassFilterFields
+            singleLine
+            weekDay={filterWeekDay}
+            onWeekDayChange={setFilterWeekDay}
+            shift={filterShift}
+            onShiftChange={setFilterShift}
+            laboratoryId={filterLabId}
+            onLaboratoryIdChange={setFilterLabId}
+          />
         </div>
-      </div>
+      </CollapsibleFilterBar>
 
       {/* Table */}
       <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">

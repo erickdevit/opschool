@@ -60,6 +60,7 @@ export interface ClassFilterFieldsProps {
   onLaboratoryIdChange: (val: string) => void;
   laboratories?: LocalRecord[];
   compact?: boolean;
+  singleLine?: boolean;
   className?: string;
 }
 
@@ -72,6 +73,7 @@ export function ClassFilterFields({
   onLaboratoryIdChange,
   laboratories: providedLabs,
   compact = false,
+  singleLine = false,
   className = '',
 }: ClassFilterFieldsProps) {
   const labEntity = useEntity('laboratories');
@@ -130,6 +132,39 @@ export function ClassFilterFields({
           ))}
         </select>
       </div>
+    );
+  }
+
+  if (singleLine) {
+    return (
+      <>
+        <div className="w-full sm:w-32 shrink-0">
+          <SelectField
+            label="Dia"
+            value={weekDay}
+            onChange={onWeekDayChange}
+            options={weekDayFilterOptions}
+          />
+        </div>
+
+        <div className="w-full sm:w-32 shrink-0">
+          <SelectField
+            label="Turno"
+            value={shift}
+            onChange={onShiftChange}
+            options={shiftFilterOptions}
+          />
+        </div>
+
+        <div className="w-full sm:w-32 shrink-0">
+          <SelectField
+            label="Lab"
+            value={laboratoryId}
+            onChange={onLaboratoryIdChange}
+            options={labOptions}
+          />
+        </div>
+      </>
     );
   }
 

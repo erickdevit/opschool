@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../app-context';
+import { CollapsibleFilterBar } from '../../components';
 import { useEntity } from '../../lib/use-entity';
 import {
   canManageFinance,
@@ -467,21 +468,14 @@ export function FinanceDashboardPage() {
 
   return (
     <div className="flex flex-col gap-5 text-left">
-      {/* Top Filter Bar */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-2xs">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-900">Painel Financeiro & B.I.</p>
-              <p className="text-[11px] text-slate-400 font-medium">
-                Competência {MONTH_NAMES[parseInt(filterMonth, 10) - 1]} / {filterYear}
-              </p>
-            </div>
-          </div>
-
+      {/* Top Filter Bar (Single-Line & Collapsible) */}
+      <CollapsibleFilterBar
+        title="Painel Financeiro & B.I."
+        icon={Calendar}
+        storageKey="filter_finance_dashboard_expanded"
+        activeCount={(selectedClassId ? 1 : 0) + (selectedStatus !== 'all' ? 1 : 0) + (filterWeekDay ? 1 : 0) + (filterShift ? 1 : 0) + (filterLabId ? 1 : 0)}
+        summary={`Competência ${MONTH_NAMES[parseInt(filterMonth, 10) - 1]} / ${filterYear}`}
+        headerActions={
           <div className="flex flex-wrap items-center gap-2">
             {/* Month & Year Selects */}
             <div className="flex items-center gap-1.5">
@@ -489,7 +483,7 @@ export function FinanceDashboardPage() {
                 aria-label="Mês de competência"
                 value={filterMonth}
                 onChange={(e) => setFilterMonth(e.target.value)}
-                className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
               >
                 {MONTH_NAMES.map((name, i) => (
                   <option key={name} value={String(i + 1)}>
@@ -502,7 +496,7 @@ export function FinanceDashboardPage() {
                 aria-label="Ano de competência"
                 value={filterYear}
                 onChange={(e) => setFilterYear(e.target.value)}
-                className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
               >
                 {['2024', '2025', '2026', '2027', '2028'].map((y) => (
                   <option key={y} value={y}>
@@ -513,7 +507,7 @@ export function FinanceDashboardPage() {
             </div>
 
             {/* Quick Presets */}
-            <div className="flex items-center gap-1">
+            <div className="hidden sm:flex items-center gap-1">
               <button
                 type="button"
                 onClick={handleCurrentMonth}
@@ -530,58 +524,6 @@ export function FinanceDashboardPage() {
               </button>
             </div>
 
-            {/* Class attribute filters: Dia da semana, Turno, Lab */}
-            <ClassFilterFields
-              compact
-              weekDay={filterWeekDay}
-              onWeekDayChange={setFilterWeekDay}
-              shift={filterShift}
-              onShiftChange={setFilterShift}
-              laboratoryId={filterLabId}
-              onLaboratoryIdChange={setFilterLabId}
-            />
-
-            {/* Turma Filter */}
-            <select
-              aria-label="Filtrar por turma"
-              value={selectedClassId}
-              onChange={(e) => setSelectedClassId(e.target.value)}
-              className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
-            >
-              <option value="">Todas as turmas</option>
-              {classOptions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-
-            {/* Status Filter */}
-            <select
-              aria-label="Filtrar por situação"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
-            >
-              <option value="all">Todas as situações</option>
-              <option value="aberto">Em Aberto</option>
-              <option value="paga">Pagas</option>
-              <option value="atrasada">Atrasadas</option>
-              <option value="parcial">Parciais</option>
-            </select>
-
-            {/* Reset button */}
-            {(selectedClassId || selectedStatus !== 'all' || filterWeekDay || filterShift || filterLabId) && (
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                title="Limpar filtros adicionais"
-                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-            )}
-
             {/* Print action */}
             <button
               type="button"
@@ -593,13 +535,67 @@ export function FinanceDashboardPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Imprimir</span>
+              <span className="hidden sm:inline">Imprimir</span>
             </button>
 
             {loading && <RefreshCw className="w-3.5 h-3.5 text-slate-400 animate-spin ml-1" />}
           </div>
+        }
+      >
+        <div className="flex flex-wrap xl:flex-nowrap items-center gap-2.5">
+          {/* Class attribute filters: Dia da semana, Turno, Lab */}
+          <ClassFilterFields
+            compact
+            weekDay={filterWeekDay}
+            onWeekDayChange={setFilterWeekDay}
+            shift={filterShift}
+            onShiftChange={setFilterShift}
+            laboratoryId={filterLabId}
+            onLaboratoryIdChange={setFilterLabId}
+          />
+
+          {/* Turma Filter */}
+          <select
+            aria-label="Filtrar por turma"
+            value={selectedClassId}
+            onChange={(e) => setSelectedClassId(e.target.value)}
+            className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 min-h-[36px] cursor-pointer"
+          >
+            <option value="">Todas as turmas</option>
+            {classOptions.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Status Filter */}
+          <select
+            aria-label="Filtrar por situação"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 min-h-[36px] cursor-pointer"
+          >
+            <option value="all">Todas as situações</option>
+            <option value="aberto">Em Aberto</option>
+            <option value="paga">Pagas</option>
+            <option value="atrasada">Atrasadas</option>
+            <option value="parcial">Parciais</option>
+          </select>
+
+          {/* Reset button */}
+          {(selectedClassId || selectedStatus !== 'all' || filterWeekDay || filterShift || filterLabId) && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              title="Limpar filtros adicionais"
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
-      </div>
+      </CollapsibleFilterBar>
 
       {/* KPI Cards: Mensalidades & Recebíveis */}
       <div>

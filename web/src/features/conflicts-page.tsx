@@ -12,7 +12,7 @@ import {
   FileCode,
 } from 'lucide-react';
 import { useApp } from '../app-context';
-import { Section } from '../components';
+import { CollapsibleFilterBar, Section } from '../components';
 import { ApiError, OfflineError } from '../lib/api';
 import type { LocalRecord } from '../types';
 import { entityLabels } from '../types';
@@ -195,10 +195,25 @@ export function ConflictsPage() {
         </div>
       )}
 
-      {/* Filter Toolbar */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex-1 relative">
+      {/* Filter Toolbar (Single-Line & Collapsible) */}
+      <CollapsibleFilterBar
+        title="Filtros de conflitos"
+        storageKey="filter_conflicts_expanded"
+        activeCount={(query ? 1 : 0) + (filter !== 'pending' ? 1 : 0)}
+        headerActions={
+          <button
+            type="button"
+            aria-label="Atualizar conflitos"
+            disabled={loadingRemote}
+            onClick={() => void Promise.all([loadLocal(), loadRemote()])}
+            className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw className={`w-4 h-4 ${loadingRemote ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      >
+        <div className="flex flex-wrap xl:flex-nowrap items-center gap-2.5">
+          <div className="flex-1 min-w-[200px] relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
               <Search className="w-4 h-4" />
             </div>
@@ -210,64 +225,55 @@ export function ConflictsPage() {
               className="w-full pl-9 pr-3 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg shadow-2xs focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-transparent transition-all placeholder:text-slate-400"
             />
           </div>
-          <button
-            type="button"
-            aria-label="Atualizar conflitos"
-            disabled={loadingRemote}
-            onClick={() => void Promise.all([loadLocal(), loadRemote()])}
-            className="p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${loadingRemote ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
 
-        <div className="flex items-center gap-2 flex-wrap mt-4 pt-3 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={() => setFilter('pending')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-              filter === 'pending'
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            Pendentes ({counts.pending})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('resolved')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-              filter === 'resolved'
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            Resolvidos ({counts.resolved})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('rejected')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-              filter === 'rejected'
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            Rejeitadas ({counts.rejected})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('all')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-              filter === 'all'
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            Todos ({counts.all})
-          </button>
+          <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+            <button
+              type="button"
+              onClick={() => setFilter('pending')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                filter === 'pending'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Pendentes ({counts.pending})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('resolved')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                filter === 'resolved'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Resolvidos ({counts.resolved})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('rejected')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                filter === 'rejected'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Rejeitadas ({counts.rejected})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('all')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                filter === 'all'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Todos ({counts.all})
+            </button>
+          </div>
         </div>
-      </div>
+      </CollapsibleFilterBar>
 
       {/* Remote Conflicts List */}
       {visible.remote.length > 0 && (

@@ -18,7 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { useApp } from '../app-context';
-import { DateField, PageDialog, SelectField } from '../components';
+import { CollapsibleFilterBar, DateField, PageDialog, SelectField } from '../components';
 import { SearchableStudentSelect } from './student-select';
 import {
   filterClassesByAttributes,
@@ -810,8 +810,13 @@ export function AttendancePage({ today = todayInSaoPaulo() }: { today?: string }
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Unified Single-Line Toolbar */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xs">
+      {/* Unified Single-Line Toolbar (Collapsible) */}
+      <CollapsibleFilterBar
+        title="Filtros da chamada"
+        storageKey="filter_attendance_expanded"
+        activeCount={(search ? 1 : 0) + (studentStatusFilter !== 'ativos' ? 1 : 0) + (filterWeekDay ? 1 : 0) + (filterShift ? 1 : 0) + (filterLabId ? 1 : 0)}
+        summary={classOptions.find((o) => o.value === classId)?.label}
+      >
         <div className="flex flex-wrap xl:flex-nowrap items-end gap-2.5">
           {/* Busca aluno - no canto esquerdo iniciando a linha */}
           <div className="flex-1 min-w-[180px] flex flex-col gap-1.5 text-left">
@@ -906,7 +911,7 @@ export function AttendancePage({ today = todayInSaoPaulo() }: { today?: string }
             />
           </div>
         </div>
-      </div>
+      </CollapsibleFilterBar>
 
       {/* Read-only Alert */}
       {!access.editable && classId && canonicalDate && (
